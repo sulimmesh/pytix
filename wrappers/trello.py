@@ -6,11 +6,23 @@ BASE = "https://api.trello.com/1/"
 
 
 class Trello():
-	def __init__(self, username=None, password=None, board=None):
-		self._board = board
+	def __init__(self, project=None, username=None, password=None):
 		self._key = None
 		self._token = None
 		self._authorize()
+		if project:
+			self._board = self.setProject(project)
+		else:
+			try:
+				with open("projects.yaml", "r") as f:
+					data = f.read()
+				boards = yaml.load(data)
+				self._board = boards["trello"]
+			except IOError:
+				print "If you have not previously set a Trello board as your current project, you must\nspecify a board name."
+				board_name = raw_input("Board name: ")
+				self._board = self.setProject(board_name)
+
 
 	def _authorize(self):
 		try:
@@ -37,12 +49,16 @@ class Trello():
 			with open("credentials.yaml", "w") as f:
 				f.write(yaml.dump(creds))
 
-	def setProject(self, proj_name):
+	def _getCreds(self):
 		with open("credentials.yaml", "r") as f:
 			data = f.read()
 		creds = yaml.load(data)
 		key = creds["trello"]["key"]
 		token = creds["trello"]["token"]
+		return key, token
+
+	def setProject(self, proj_name):
+		key, token = self._getCreds()
 		url = BASE + "members/me?&boards=all&key={0}&token={1}".format(key, token)
 		response = requests.get(url)
 		boards = response.json()["boards"]
@@ -60,3 +76,12 @@ class Trello():
 				with open("projects.yaml", "w") as f:
 					f.write(yaml.dump(projs))
 				return board["id"]
+
+	def getProject(self):
+		key, token = self._getCreds()
+		board = self._board
+		print board
+		url = BASE + "boards/{0}?lists=open&cards=open&key={1}&token={2}".format(board, key, token)
+		response = requests.get(url)
+		#TODO deal with the response here
+		#what do we want to show the user about the board?
