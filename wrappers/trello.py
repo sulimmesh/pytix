@@ -80,8 +80,43 @@ class Trello():
 	def getProject(self):
 		key, token = self._getCreds()
 		board = self._board
-		print board
 		url = BASE + "boards/{0}?lists=open&cards=open&key={1}&token={2}".format(board, key, token)
 		response = requests.get(url)
 		#TODO deal with the response here
 		#what do we want to show the user about the board?
+		json = response.json()
+		lists = json["lists"]
+		cards = json["cards"]
+		list_stats = {}
+		max_length = 0
+		for item in lists:
+			cur_length = len(item["name"])
+			if cur_length > max_length:
+				max_length = cur_length
+			list_stats[item["id"]] = {
+				"name": item["name"],
+				"no. of cards": 0
+			}
+		for card in cards:
+			list_stats[card["idList"]]["no. of cards"] += 1
+		left_side = " List Name "
+		right_side = " No. of Cards ".format("no. of cards")
+		if len(left_side)-2 > max_length:
+			max_length = len(left_side)-2
+		print "\n"+json["name"]
+		print "\nStatistics:" 
+		print "-"*(19+max_length)
+		print "|{0:{1}}|{2}|".format(left_side, max_length+2, right_side)
+		print "-"*(19+max_length)
+		for key in list_stats:
+			name = " {} ".format(list_stats[key]["name"])
+			num = " {} ".format(str(list_stats[key]["no. of cards"]))
+			print "|{0:{1}}|{2:14}|".format(
+				name,
+				max_length+2,
+				num)
+			print "-"*(19+max_length)
+
+if __name__ == "__main__":
+	trello = Trello()
+	trello.getProject()
