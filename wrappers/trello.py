@@ -117,6 +117,71 @@ class Trello():
 				num)
 			print "-"*(19+max_length)
 
+	def getList(self, name):
+		key, token = self._getCreds()
+		board = self._board
+		url = BASE + "boards/{0}?lists=open&key={1}&token={2}".format(board, key, token)
+		response = requests.get(url)
+		json = response.json()
+		for item in json["lists"]:
+			if item["name"] == name:
+				list_id = item["id"]
+		if list_id:
+			url = BASE + "lists/{0}?cards=open&key={1}&token={2}".format(list_id, key, token)
+			response = requests.get(url)
+			json = response.json()
+			cards = {}
+			max_name_len = 0
+			max_id_len = 0
+			for card in json["cards"]:
+				if len(card["name"]) > max_name_len:
+					max_name_len = len(card["name"])
+				if len(card["id"]) > max_id_len:
+					max_id_len = len(card["id"])
+				cards[card["id"]] = {
+					"name": card["name"],
+					"id": card["id"]
+				}
+			left_side = " Card Name "
+			right_side = " Card ID "
+			if len(left_side)-2 > max_name_len:
+				max_length = len(left_side)-2
+			if len(right_side)-2 > max_id_len:
+				max_length = len(right_side)-2
+			print "\n"+json["name"]
+			print "-"*(7+max_id_len+max_name_len)
+			print "|{0:{1}}|{2:{3}}|".format(left_side, max_name_len+2, right_side,
+				max_id_len+2)
+			print "-"*(7+max_id_len+max_name_len)
+			for key in cards:
+				name = " {} ".format(cards[key]["name"])
+				ID = " {} ".format(cards[key]["id"])
+				print "|{0:{1}}|{2:{3}}|".format(
+					name,
+					max_name_len+2,
+					ID,
+					max_id_len+2)
+				print "-"*(7+max_id_len+max_name_len)
+		else:
+			print "List not found. Check your spelling."
+
+	def getTask(self, name=None, ID=None):
+		if not name and not ID:
+			print "You must specify either a card name or a card ID."
+			return None
+		key, token = self._getCreds()
+		board = self._board
+		url = BASE + "boards/{0}?cards=open&key={1}&token={2}".format(board, key, token)
+		response = requests.get(url)
+		json = response.json()
+		for card in json["cards"]:
+			if card["name"] == name:
+				card_id = card["id"]
+		if card_id:
+			pass
+		else:
+			print "Card not found. Check your spelling."
+
 if __name__ == "__main__":
 	trello = Trello()
-	trello.getProject()
+	trello.getList("Current Sprint")
