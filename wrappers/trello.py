@@ -174,14 +174,23 @@ class Trello():
 		url = BASE + "boards/{0}?cards=open&key={1}&token={2}".format(board, key, token)
 		response = requests.get(url)
 		json = response.json()
-		for card in json["cards"]:
-			if card["name"] == name:
-				card_id = card["id"]
+		card_id = None
+		if ID:
+			card_id = ID
+		else:
+			for card in json["cards"]:
+				if card["name"] == name:
+					card_id = card["id"]
 		if card_id:
-			pass
+			url = BASE + "cards/{0}?key={1}&token={2}".format(card_id, key, token)
+			response = requests.get(url)
+			json = response.json()
+			print json
+			#TODO specify which card details we print out to the user
 		else:
 			print "Card not found. Check your spelling."
 
 if __name__ == "__main__":
 	trello = Trello()
 	trello.getList("Current Sprint")
+	trello.getTask("View Trello task")
