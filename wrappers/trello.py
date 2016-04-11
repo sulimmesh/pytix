@@ -232,7 +232,40 @@ class Trello():
 		else:
 			print "Card not found. Check your spelling."
 
+	def moveTask(self, name, from_list, to_list):
+		key, token = self._getCreds()
+		board = self._board
+		board_url = BASE + "boards/{0}?lists=open&key={1}&token={2}".format(board, key, token)
+		response = requests.get(board_url)
+		json = response.json()
+		from_id = to_id = None
+		for item in json["lists"]:
+			if item["name"] == from_list:
+				from_id = item["id"]
+			elif item["name"] == to_list:
+				to_id = item["id"]
+		if not from_id:
+			print "Source board not found."
+			return None
+		if not to_id:
+			print "Destination board not found."
+			return None
+		url1 = BASE + "lists/{0}?cards=open&key={1}&token={2}".format(from_id, key, token)
+		response = requests.get(url1)
+		json = response.json()
+		card_id = None
+		for card in json["cards"]:
+			if card["name"] == name:
+				card_id = card["id"]
+		if not card_id:
+			print "Card not found."
+			return None
+		url = BASE + "cards/{0}?idList={1}&pos=bottom&key={2}&token={3}".format(card_id, to_id, key, token)
+		response = requests.put(url)
+		json = response.json()
+		print "'{0}' moved to list '{1}'".format(json["name"], to_list)
+
 if __name__ == "__main__":
 	trello = Trello()
-	trello.getList("Current Sprint")
-	trello.getTask("Edit Trello task")
+	#trello.getList("Current Sprint")
+	trello.moveTask("Move Trello Task", "Current Sprint", "Release-v0.1.0")
