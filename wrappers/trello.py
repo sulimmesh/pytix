@@ -265,7 +265,26 @@ class Trello():
 		json = response.json()
 		print "'{0}' moved to list '{1}'".format(json["name"], to_list)
 
+	def addTask(self, name, to_list):
+		key, token = self._getCreds()
+		board = self._board
+		board_url = BASE + "boards/{0}?lists=open&key={1}&token={2}".format(board, key, token)
+		response = requests.get(board_url)
+		json = response.json()
+		to_id = None
+		for item in json["lists"]:
+			if item["name"] == to_list:
+				to_id = item["id"]
+		if not to_id:
+			print "Destination list not found."
+			return None
+		url = BASE + "cards?name={0}&idList={1}&due=null&key={2}&token={3}".format(name,
+			to_id, key, token)
+		response = requests.post(url, data={})
+		json = response.json()
+		print "'{0}' added to list '{1}'".format(json["name"], to_list)
+
 if __name__ == "__main__":
 	trello = Trello()
 	#trello.getList("Current Sprint")
-	trello.moveTask("Move Trello Task", "Current Sprint", "Release-v0.1.0")
+	trello.addTask("Test card", "Current Sprint")
