@@ -1,6 +1,7 @@
 '''wrapper class for Trello REST API'''
 import requests
 import yaml
+import datetime
 
 BASE = "https://api.trello.com/1/"
 
@@ -145,9 +146,9 @@ class Trello():
 			left_side = " Card Name "
 			right_side = " Card ID "
 			if len(left_side)-2 > max_name_len:
-				max_length = len(left_side)-2
+				max_name_len = len(left_side)-2
 			if len(right_side)-2 > max_id_len:
-				max_length = len(right_side)-2
+				max_id_len = len(right_side)-2
 			print "\n"+json["name"]
 			print "-"*(7+max_id_len+max_name_len)
 			print "|{0:{1}}|{2:{3}}|".format(left_side, max_name_len+2, right_side,
@@ -182,15 +183,55 @@ class Trello():
 				if card["name"] == name:
 					card_id = card["id"]
 		if card_id:
-			url = BASE + "cards/{0}?key={1}&token={2}".format(card_id, key, token)
+			url = BASE + "cards/{0}?actions=commentCard&key={1}&token={2}".format(card_id, key, token)
 			response = requests.get(url)
 			json = response.json()
-			print json
-			#TODO specify which card details we print out to the user
+			comments = {}
+			max_name_len = 0
+			max_text_len = 0
+			max_date_len = 0
+			for comment in json["actions"]:
+				if len(comment["memberCreator"]["username"])-2 > max_name_len:
+					max_name_len = len(comment["memberCreator"]["username"])
+				if len(comment["data"]["text"])-2 > max_text_len:
+					max_text_len = len(comment["data"]["text"])
+				date = comment["date"].split("T")[0]
+				if len(date)-2 > max_date_len:
+					max_date_len = len(date)
+				comments[comment["id"]] = {
+					"username": comment["memberCreator"]["username"],
+					"text": comment["data"]["text"],
+					"date": date
+				}
+			name = json["name"]
+			name_label = " Username "
+			text_label = " Comment Text "
+			date_label = " Date "
+			if len(name_label)-2 > max_name_len:
+				max_name_len = len(name_label)-2
+			if len(text_label)-2 > max_text_len:
+				max_text_len = len(text_label)-2
+			print "\n"+name
+			print "-"*(10+max_text_len+max_name_len+max_date_len)
+			print "|{0:{1}}|{2:{3}}|{4:{5}}|".format(name_label, max_name_len+2, text_label,
+				max_text_len+2, date_label, max_date_len+2)
+			print "-"*(10+max_text_len+max_name_len+max_date_len)
+			for key in comments:
+				name = " {} ".format(comments[key]["username"])
+				text = " {} ".format(comments[key]["text"])
+				date = " {} ".format(comments[key]["date"])
+				print "|{0:{1}}|{2:{3}}|{4:{5}}|".format(
+					name,
+					max_name_len+2,
+					text,
+					max_text_len+2,
+					date,
+					max_date_len+2)
+				print "-"*(10+max_text_len+max_name_len+max_date_len)
 		else:
 			print "Card not found. Check your spelling."
 
 if __name__ == "__main__":
 	trello = Trello()
 	trello.getList("Current Sprint")
-	trello.getTask("View Trello task")
+	trello.getTask("Edit Trello task")
