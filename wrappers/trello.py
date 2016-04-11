@@ -216,6 +216,7 @@ class Trello():
 			print "|{0:{1}}|{2:{3}}|{4:{5}}|".format(name_label, max_name_len+2, text_label,
 				max_text_len+2, date_label, max_date_len+2)
 			print "-"*(10+max_text_len+max_name_len+max_date_len)
+			#TODO need to handle comments where overall table width > 80 chars
 			for key in comments:
 				name = " {} ".format(comments[key]["username"])
 				text = " {} ".format(comments[key]["text"])
