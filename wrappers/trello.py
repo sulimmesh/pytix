@@ -284,7 +284,35 @@ class Trello():
 		json = response.json()
 		print "'{0}' added to list '{1}'".format(json["name"], to_list)
 
+	def commentTask(self, name, text):
+		if not name and not ID:
+			print "You must specify either a card name or a card ID."
+			return None
+		key, token = self._getCreds()
+		board = self._board
+		url = BASE + "boards/{0}?cards=open&key={1}&token={2}".format(board, key, token)
+		response = requests.get(url)
+		json = response.json()
+		card_id = None
+		for card in json["cards"]:
+			if card["name"] == name:
+				card_id = card["id"]
+		if not card_id:
+			print "Card not found."
+			return None
+		url = BASE + "cards/{0}/actions/comments?key={1}&token={2}".format(card_id, key, token)
+		data = {
+			"text": text
+		}
+		response = requests.post(url, data=data)
+		json = response.json()
+		if text == json["display"]["entities"]["comment"]["text"]:
+				print "Comment added successfully."
+		else:
+			print "There was an error in processing your comment."
+
 if __name__ == "__main__":
 	trello = Trello()
 	#trello.getList("Current Sprint")
-	trello.addTask("Test card", "Current Sprint")
+	text = raw_input("text: ")
+	trello.commentTask("Test Card", text)
